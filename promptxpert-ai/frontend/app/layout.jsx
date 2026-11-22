@@ -2,6 +2,7 @@ import { Bricolage_Grotesque, Figtree } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import Navbar from "@/components/Navbar";
+import CommandPalette from "@/components/CommandPalette";
 
 const display = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-display", display: "swap" });
 const body = Figtree({ subsets: ["latin"], variable: "--font-body", display: "swap" });
@@ -18,6 +19,7 @@ export default function RootLayout({ children }) {
       <body>
         <Providers>
           <Navbar />
+          <CommandPalette />
           {children}
         </Providers>
       </body>

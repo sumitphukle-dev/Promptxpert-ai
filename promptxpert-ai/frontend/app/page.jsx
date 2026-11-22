@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useInView, useScroll, useSpring } from "framer-motion";
-import { ChevronDown, FileSearch, Fingerprint, ShieldCheck, Wand2 } from "lucide-react";
+import { Activity, Sparkles, ChevronDown, FileSearch, Fingerprint, Layers, LayoutDashboard, Link2, Palette, ShieldAlert, ShieldCheck, Shuffle, Wand2 } from "lucide-react";
 import Footer from "@/components/Footer";
 import Gauge from "@/components/Gauge";
 import Reveal from "@/components/Reveal";
@@ -11,7 +11,7 @@ import ScanStage from "@/components/ScanStage";
 const EASE = [0.2, 0.8, 0.2, 1];
 
 function Hero() {
-  const words = "Check where an image might come from. Rebuild the prompt behind it.".split(" ");
+  const words = "Turn any image into the perfect prompt.".split(" ");
   return (
     <section className="relative isolate overflow-hidden pt-32 pb-24 sm:pt-40">
       <div aria-hidden className="absolute -top-40 left-1/2 -z-10 h-[620px] w-[900px] -translate-x-1/2 rounded-full bg-iris/20 blur-[140px]" />
@@ -28,11 +28,11 @@ function Hero() {
           </h1>
           <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9, duration: 0.8, ease: EASE }}
             className="mt-6 max-w-lg text-lg leading-relaxed text-dim">
-            Upload a JPEG, PNG or WebP. PromptXpert AI reads the pixels, the file&apos;s metadata and the picture itself, and keeps those three kinds of evidence separate so you can judge for yourself.
+            Upload an image and get ready-to-use prompts for Midjourney, Stable Diffusion, Flux and DALL·E, then fine-tune every detail in the studio. You can also check an image&apos;s authenticity signals, and we keep that evidence honest and separate.
           </motion.p>
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.1, duration: 0.8, ease: EASE }} className="mt-9 flex flex-wrap items-center gap-4">
-            <Link href="/analyze" className="btn btn-primary">Analyze an image</Link>
-            <a href="#how" className="btn btn-ghost">See how it works</a>
+            <Link href="/generator" className="btn btn-primary">Generate a prompt</Link>
+            <Link href="/analyze" className="btn btn-ghost">Check authenticity</Link>
           </motion.div>
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4 }} className="mt-5 text-sm text-dim">
             No account needed. Uploaded images are deleted right after analysis.
@@ -115,6 +115,34 @@ function Signals() {
   );
 }
 
+
+const TOOLS = [
+  [Wand2, "Prompt Studio", "Toggle, weight and edit every detail the AI found, with a live prompt, token meter and completeness score.", "sm:col-span-2"],
+  [Shuffle, "Five target generators", "Midjourney flags, Stable Diffusion weights, Flux and DALL·E prose, or universal tags."],
+  [Sparkles, "AI rewrite tools", "Polish, expand, shorten, translate, reimagine in 8 styles, or draft a negative prompt."],
+  [Layers, "Forensic heatmaps", "Overlay error-level, noise and frequency maps on your photo.", "sm:col-span-2"],
+  [Activity, "Robustness check", "Re-runs the detector on edited copies to show if the estimate holds."],
+  [ShieldAlert, "Privacy scan", "Finds GPS and serial numbers in a file, and strips them in one click."],
+  [Palette, "Palette export", "Copy dominant colours as CSS variables, Tailwind or JSON."],
+  [Link2, "Compare and share", "Slide-compare two images and share a results-only link."],
+];
+
+function Toolkit() {
+  return (
+    <section className="mx-auto max-w-6xl px-5 py-16">
+      <Reveal><h2 className="max-w-2xl font-display text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">More than a yes or no</h2></Reveal>
+      <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {TOOLS.map(([Icon, t, d, span], i) => (
+          <Reveal key={t} delay={i * 0.05} className={span || ""}>
+            <motion.div whileHover={{ y: -4 }} transition={{ type: "spring", stiffness: 300, damping: 20 }} className="card h-full p-6 transition-colors hover:border-iris/50">
+              <Icon size={20} className="text-iris" /><h3 className="mt-4 font-display text-xl font-semibold">{t}</h3><p className="mt-2 text-sm leading-relaxed text-dim">{d}</p>
+            </motion.div>
+          </Reveal>))}
+      </div>
+    </section>
+  );
+}
+
 const STEPS = [
   ["Upload", "Drop in a JPEG, PNG or WebP up to 10 MB. The file is checked for type, signature and size before anything runs."],
   ["Choose what to run", "Authenticity signals, prompt reconstruction, or both."],
@@ -173,9 +201,10 @@ function Honest() {
 
 const FAQ = [
   ["Are my images stored?", "No. Images are processed in memory and discarded. If you sign in, we save the results, a file hash and your prompt text, not the picture."],
-  ["Does the prompt come from Mistral?", "Yes. A Mistral vision model describes the image, and you can optionally polish the final wording with Mistral Codestral."],
+  ["Does the prompt come from Mistral?", "Yes. A Mistral vision model describes the image. Codestral powers the rewrite tools: polish, expand, shorten, translate, reimagine and negative prompts."],
   ["Why does it sometimes say inconclusive?", "Because that is the honest answer when the evidence is weak or conflicting. A forced yes or no would be less trustworthy."],
   ["Can it verify C2PA Content Credentials?", "It detects whether a credential appears to be embedded and says when it has not validated the signature."],
+  ["Which generators are supported?", "Universal tags, Midjourney, Stable Diffusion, Flux and DALL·E 3. Each gets syntax it understands, such as aspect-ratio flags, word weights or plain prose."],
   ["Is it free?", "Yes. It runs on free-tier hosting, so the first request after a quiet period can take about 30 seconds while the server wakes up."],
 ];
 
@@ -210,9 +239,9 @@ function Cta() {
       <Reveal>
         <div className="relative mx-auto max-w-5xl overflow-hidden rounded-[2rem] border border-line bg-panel px-8 py-16 text-center sm:py-20">
           <div aria-hidden className="absolute left-1/2 top-0 h-64 w-[34rem] -translate-x-1/2 rounded-full bg-iris/25 blur-[100px]" />
-          <h2 className="relative font-display text-4xl font-semibold tracking-tight sm:text-5xl">Have an image you&apos;re unsure about?</h2>
+          <h2 className="relative font-display text-4xl font-semibold tracking-tight sm:text-5xl">Got an image you want to recreate?</h2>
           <p className="relative mx-auto mt-4 max-w-md text-dim">It takes about ten seconds and you don&apos;t need an account.</p>
-          <Link href="/analyze" className="btn btn-primary relative mt-8">Analyze an image</Link>
+          <Link href="/generator" className="btn btn-primary relative mt-8">Generate a prompt</Link>
         </div>
       </Reveal>
     </section>
@@ -222,7 +251,7 @@ function Cta() {
 export default function Home() {
   return (
     <main>
-      <Hero /><Signals /><How /><Honest /><Faq /><Cta /><Footer />
+      <Hero /><Signals /><Toolkit /><How /><Honest /><Faq /><Cta /><Footer />
     </main>
   );
 }

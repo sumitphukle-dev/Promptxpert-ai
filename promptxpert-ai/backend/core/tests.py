@@ -78,3 +78,69 @@ class PromptTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ForensicsTests(unittest.TestCase):
+    def setUp(self):
+        import numpy as np
+        rng = np.random.default_rng(1)
+        arr = (rng.normal(128, 30, (160, 200, 3))).clip(0, 255).astype("uint8")
+        self.img = Image.fromarray(arr)
+
+    def test_maps_return_images(self):
+        from core.services import forensics
+        m = forensics.maps(self.img)
+        for k in ("ela", "noise", "spectrum"):
+            self.assertTrue(m[k]["image"].startswith("data:image/jpeg;base64,"))
+
+    def test_robustness_and_hash_and_palette(self):
+        from core.services import forensics
+        rob = forensics.robustness(self.img, detector.analyze)
+        self.assertEqual(len(rob["variants"]), 4)
+        h = forensics.dhash(self.img)
+        self.assertEqual(forensics.hamming(h, h), 0)
+        pal = forensics.palette(self.img)
+        self.assertTrue(1 <= len(pal) <= 5)
+        self.assertAlmostEqual(sum(c["share"] for c in pal), 1.0, delta=0.02)
+
+    def test_privacy_detects_gps_and_serial(self):
+        from core.services import forensics
+        ex = Image.Exif()
+        ex.get_ifd(0x8825)[1] = "N"
+        ex.get_ifd(0x8825)[2] = (19.0, 4.0, 0.0)
+        buf = io.BytesIO()
+        self.img.save(buf, "JPEG", exif=ex)
+        buf.seek(0)
+        out = forensics.privacy(Image.open(buf))
+        self.assertEqual(out["risk"], "high")
+        self.assertEqual(forensics.privacy(self.img)["risk"], "clean")
+
+
+class StudioTests(unittest.TestCase):
+    ATTRS = PromptTests.ATTRS
+
+    def test_new_targets(self):
+        a = prompts.normalize({**self.ATTRS, "keywords": ["fox", "snow"], "art_medium": "photograph"})
+        self.assertEqual(a["keywords"], ["fox", "snow"])
+        self.assertIn("The scene is set in snowy forest", prompts.compose(a, "detailed", "flux"))
+        self.assertTrue(prompts.compose(a, "detailed", "dalle3").endswith("No text or watermarks."))
+        self.assertIn("--ar 16:9", prompts.compose(a, "detailed", "midjourney", "16:9"))
+
+    def test_aspect(self):
+        from core.services import forensics
+        self.assertEqual(forensics.aspect(1500, 1000)["ratio"], "3:2")
+        self.assertEqual(forensics.aspect(1000, 1500)["ratio"], "2:3")
+        self.assertEqual(forensics.aspect(1920, 1080)["sd_size"], "1344x768")
+        self.assertEqual(forensics.aspect(800, 800)["orientation"], "square")
+
+    def test_camera_hints(self):
+        from core.services import forensics
+        ex = Image.Exif()
+        ex[0x010F], ex[0x0110] = "Canon", "Canon EOS R5"
+        ex.get_ifd(0x8769)[0x920A] = 85.0
+        buf = io.BytesIO()
+        Image.new("RGB", (100, 100)).save(buf, "JPEG", exif=ex)
+        buf.seek(0)
+        hints = forensics.camera_hints(Image.open(buf))
+        self.assertIn("shot on Canon EOS R5", hints)
+        self.assertEqual(forensics.camera_hints(Image.new("RGB", (64, 64))), [])

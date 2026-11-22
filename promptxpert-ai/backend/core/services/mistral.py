@@ -12,7 +12,7 @@ import time
 
 import requests
 
-from .prompts import FIELDS, normalize
+from .prompts import EXTRA, EXTRA_LISTS, FIELDS, normalize
 
 API = "https://api.mistral.ai/v1/chat/completions"
 
@@ -57,9 +57,13 @@ def _chat(model: str, messages: list, json_mode: bool, timeout: int = 60) -> str
 INSTRUCTION = (
     "You are analysing an image to help someone write a text-to-image prompt. Describe ONLY what is visible. "
     "Do not guess at the original prompt or the generator. Respond with a single JSON object with exactly these keys: "
-    + ", ".join(FIELDS)
-    + ". secondary_objects, color_palette and uncertain_observations are arrays of short strings; the rest are short "
-    "strings. Put anything ambiguous in uncertain_observations instead of inventing details."
+    + ", ".join(FIELDS + EXTRA + EXTRA_LISTS)
+    + ". secondary_objects, color_palette, uncertain_observations, keywords and style_tags are arrays of short strings "
+    "(keywords: 10-14 single concepts a generator responds to, most important first; style_tags: 3-6 style or medium "
+    "descriptors); the rest are short strings. art_medium is e.g. 'photograph', 'oil painting', '3D render', 'digital "
+    "illustration'. lens_and_focus covers focal length feel and depth of field. alt_text is one plain sentence for a "
+    "screen reader. negative_prompt lists things a generator should avoid to keep this look. Put anything ambiguous in "
+    "uncertain_observations instead of inventing details."
 )
 
 
@@ -82,5 +86,43 @@ def polish_prompt(draft: str, style: str) -> tuple[str, str]:
         {"role": "system", "content": "You rewrite image-generation prompts. Keep every concrete visual detail, "
          "add no new objects, remove redundancy, and return only the final prompt text."},
         {"role": "user", "content": f"Style: {style}\nDraft prompt:\n{draft}"},
+    ]
+    return _chat(model, msgs, json_mode=False).strip().strip('"'), model
+
+
+def variations(draft: str, n: int = 3) -> tuple[list[str], str]:
+    model = os.getenv("MISTRAL_MODEL", "codestral-2508")
+    msgs = [
+        {"role": "system", "content": 'You write image-generation prompts. Reply with JSON: {"variations": [..]} holding exactly '
+         "the requested number of different prompts. Keep the subject and every concrete detail; vary only camera, lighting, "
+         "mood or art style. Add no new objects."},
+        {"role": "user", "content": f"Number of variations: {n}\nBase prompt:\n{draft}"},
+    ]
+    text = re.sub(r"^```(?:json)?|```$", "", _chat(model, msgs, json_mode=True).strip(), flags=re.M).strip()
+    try:
+        items = [str(x).strip() for x in json.loads(text).get("variations", []) if str(x).strip()][:n]
+    except (ValueError, AttributeError):
+        items = []
+    if not items:
+        raise MistralError("The model returned no usable variations.")
+    return items, model
+
+
+TRANSFORMS = {
+    "expand": "Add richer concrete visual detail (materials, light quality, texture) without adding new objects or changing the subject. Make it roughly 1.5x longer.",
+    "shorten": "Cut it to the essential visual details, about half the length. Keep subject, setting, lighting and style.",
+    "polish": "Remove redundancy and awkward wording while keeping every concrete detail.",
+    "reimagine": "Rewrite so the same scene is rendered in this style: {arg}. Keep the subject and composition; replace style, medium and lighting cues to fit.",
+    "translate": "Translate into {arg}. Keep technical flags (like --ar, --style) and (word:1.2) weights exactly as they are.",
+    "negative": "Write a comma-separated negative prompt of defects to avoid for this scene (artifacts, anatomy errors, text, watermarks). Return only the list.",
+}
+
+
+def transform(text: str, mode: str, arg: str = "") -> tuple[str, str]:
+    model = os.getenv("MISTRAL_MODEL", "codestral-2508")
+    msgs = [
+        {"role": "system", "content": "You edit image-generation prompts. Return only the resulting prompt text, with no "
+         "commentary or quotes. " + TRANSFORMS[mode].format(arg=arg)},
+        {"role": "user", "content": text[:2500]},
     ]
     return _chat(model, msgs, json_mode=False).strip().strip('"'), model

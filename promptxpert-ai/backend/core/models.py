@@ -12,7 +12,14 @@ class ImageAnalysis(models.Model):
     provenance_status = models.CharField(max_length=32, blank=True)
     model_version = models.CharField(max_length=64, blank=True)
     latency_ms = models.PositiveIntegerField(default=0)
-    verdict = models.JSONField(default=dict, blank=True)
+    verdict = models.JSONField(default=dict, blank=True)  # full report: detection, provenance, privacy, palette...
+    title = models.CharField(max_length=120, blank=True)
+    original_name = models.CharField(max_length=120, blank=True)
+    starred = models.BooleanField(default=False)
+    tags = models.JSONField(default=list, blank=True)
+    palette = models.JSONField(default=list, blank=True)
+    dhash = models.CharField(max_length=16, blank=True)
+    share_token = models.CharField(max_length=40, unique=True, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

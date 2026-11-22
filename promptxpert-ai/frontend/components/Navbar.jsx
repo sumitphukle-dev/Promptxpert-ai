@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { History, LogOut } from "lucide-react";
+import { History, LayoutDashboard, LogOut, Search } from "lucide-react";
 import Logo from "./Logo";
 import { useAuth } from "./Providers";
 
@@ -26,16 +26,20 @@ export default function Navbar() {
           <Logo /> PromptXpert AI
         </Link>
         <div className="flex items-center gap-2 sm:gap-3 text-sm">
-          <Link href="/analyze" className="hidden rounded-full px-4 py-2 text-dim transition-colors hover:text-lumen sm:block">Analyze</Link>
+          <Link href="/generator" className="hidden rounded-full px-3 py-2 text-dim transition-colors hover:text-lumen sm:block">Generator</Link>
+          <Link href="/analyze" className="hidden rounded-full px-3 py-2 text-dim transition-colors hover:text-lumen md:block">Detector</Link>
+          <Link href="/compare" className="hidden rounded-full px-3 py-2 text-dim transition-colors hover:text-lumen lg:block">Compare</Link>
+          <button onClick={() => window.dispatchEvent(new Event("px:palette"))} aria-label="Open command palette" className="hidden items-center gap-2 rounded-full border border-line px-3 py-1.5 text-xs text-dim transition-colors hover:border-iris hover:text-lumen md:flex"><Search size={13} /> Ctrl K</button>
           {user ? (
             <>
+              <Link href="/dashboard" className="hidden items-center gap-1.5 rounded-full px-3 py-2 text-dim transition-colors hover:text-lumen sm:flex"><LayoutDashboard size={16} /> Dashboard</Link>
               <Link href="/history" className="flex items-center gap-1.5 rounded-full px-3 py-2 text-dim transition-colors hover:text-lumen"><History size={16} /> History</Link>
               <button onClick={signOut} className="flex items-center gap-1.5 rounded-full border border-line px-3 py-2 text-dim transition-colors hover:border-iris hover:text-lumen" aria-label="Sign out"><LogOut size={15} /> <span className="hidden sm:inline">Sign out</span></button>
             </>
           ) : (
             <>
               <Link href="/login" className="rounded-full px-4 py-2 text-dim transition-colors hover:text-lumen">Sign in</Link>
-              <Link href="/analyze" className="btn btn-primary !px-5 !py-2 !text-sm">Try it free</Link>
+              <Link href="/generator" className="btn btn-primary !px-5 !py-2 !text-sm">Try it free</Link>
             </>
           )}
         </div>

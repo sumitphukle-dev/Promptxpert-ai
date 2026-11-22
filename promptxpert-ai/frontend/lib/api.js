@@ -40,10 +40,17 @@ export const api = {
   compose: (body) => req("/api/prompt/compose", { json: body }),
   history: () => req("/api/history"),
   remove: (id) => req(`/api/history/${id}`, { method: "DELETE" }),
-  report: async (id) => {
-    const res = await req(`/api/history/${id}/report`, { raw: true });
+  update: (id, body) => req(`/api/history/${id}`, { method: "PATCH", json: body }),
+  share: (id) => req(`/api/history/${id}/share`, { method: "POST", json: {} }),
+  shared: (tokenValue) => req(`/api/share/${tokenValue}`),
+  stats: () => req("/api/stats"),
+  transform: (text, mode, arg = "") => req("/api/prompt/transform", { json: { text, mode, arg } }),
+  compare: (form) => req("/api/compare", { form }),
+  variations: (attributes) => req("/api/prompt/variations", { json: { attributes } }),
+  report: async (id, fmt = "md") => {
+    const res = await req(`/api/history/${id}/report${fmt === "json" ? "?fmt=json" : ""}`, { raw: true });
     const url = URL.createObjectURL(await res.blob());
-    const a = Object.assign(document.createElement("a"), { href: url, download: `promptxpert-report-${id}.md` });
+    const a = Object.assign(document.createElement("a"), { href: url, download: `promptxpert-report-${id}.${fmt}` });
     a.click();
     URL.revokeObjectURL(url);
   },
