@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: promptxpert-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: ./build.sh
+    startCommand: gunicorn promptxpert.wsgi:application --workers 1 --threads 4 --timeout 120
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false   # paste your Vercel URL after the frontend deploys
+      - key: MISTRAL_API_KEY
+        sync: false   # paste your free Mistral key in the Render dashboard
