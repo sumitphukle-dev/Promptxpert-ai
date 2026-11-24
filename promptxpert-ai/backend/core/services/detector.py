@@ -79,9 +79,13 @@ def _heuristics(img: Image.Image) -> dict:
     blocks = resid[:hb, :wb].reshape(hb // bs, bs, wb // bs, bs).std(axis=(1, 3))
     uniformity = float(blocks.std() / (blocks.mean() + 1e-6))  # real sensor noise is uneven
 
-    # Weak, hand-set weights. Output is intentionally compressed toward 0.5.
-    z = 0.9 * (1.6 - noise_std) / 1.6 + 0.6 * (0.55 - uniformity) + 0.4 * (0.002 - hf_ratio) * 200
-    score = float(np.clip(0.5 + 0.18 * math.tanh(z), 0.3, 0.7))
+    # These are weak, hand-set signals rather than a trained classifier. Normalize
+    # each in the units measured above so one feature cannot saturate the score.
+    noise_signal = float(np.clip((12.0 - noise_std) / 12.0, -1.0, 1.0))
+    uniformity_signal = float(np.clip(0.55 - uniformity, -1.0, 1.0))
+    frequency_signal = float(np.clip((0.20 - hf_ratio) / 0.20, -1.0, 1.0))
+    z = 0.45 * noise_signal + 0.25 * uniformity_signal + 0.30 * frequency_signal
+    score = float(np.clip(0.5 + 0.18 * math.tanh(z), 0.32, 0.68))
     sig = [
         {"name": "Noise level", "value": round(noise_std, 3),
          "note": "Very smooth noise can be common in synthetic images, but also in denoised or compressed photos."},

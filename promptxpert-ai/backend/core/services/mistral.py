@@ -113,7 +113,7 @@ TRANSFORMS = {
     "shorten": "Cut it to the essential visual details, about half the length. Keep subject, setting, lighting and style.",
     "polish": "Remove redundancy and awkward wording while keeping every concrete detail.",
     "reimagine": "Rewrite so the same scene is rendered in this style: {arg}. Keep the subject and composition; replace style, medium and lighting cues to fit.",
-    "translate": "Translate into {arg}. Keep technical flags (like --ar, --style) and (word:1.2) weights exactly as they are.",
+    "translate": "Translate naturally into {arg}. Preserve the image's meaning, visual specificity, proper names, generator syntax (like --ar and --style), and weighted terms (word:1.2) exactly. Do not add commentary or omit any prompt detail.",
     "negative": "Write a comma-separated negative prompt of defects to avoid for this scene (artifacts, anatomy errors, text, watermarks). Return only the list.",
 }
 

@@ -3,12 +3,20 @@ import { useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle, BookmarkCheck, Check, Download, FileJson, Loader2, Minus, Plus, RotateCcw, Scissors, Shuffle, Sparkles, Undo2, Wand2, X, Languages, Expand, Ban } from "lucide-react";
 import { api } from "@/lib/api";
-import { CATS, DEFAULT_NEGATIVE, DETAIL, REIMAGINE, TARGETS, build, chipsFromResult, quality, stats } from "@/lib/promptbuilder";
+import { CATS, DEFAULT_NEGATIVE, DETAIL, REIMAGINE, TARGETS, build, chipsFromResult, improvementScore, quality, stats } from "@/lib/promptbuilder";
 import { STYLES, download } from "@/lib/util";
 import CopyButton from "./CopyButton";
 import PaletteBar from "./PaletteBar";
 
-const LANGS = ["Spanish", "French", "German", "Hindi", "Japanese", "Portuguese"];
+const LANGS = [
+  ["English", "English"], ["Hindi", "Hindi · हिन्दी"], ["Marathi", "Marathi · मराठी"],
+  ["Bengali", "Bengali · বাংলা"], ["Gujarati", "Gujarati · ગુજરાતી"], ["Kannada", "Kannada · ಕನ್ನಡ"],
+  ["Malayalam", "Malayalam · മലയാളം"], ["Punjabi", "Punjabi · ਪੰਜਾਬੀ"], ["Tamil", "Tamil · தமிழ்"],
+  ["Telugu", "Telugu · తెలుగు"], ["Urdu", "Urdu · اردو"], ["Arabic", "Arabic"],
+  ["Chinese (Simplified)", "Chinese · 简体中文"], ["French", "French"], ["German", "German"],
+  ["Japanese", "Japanese · 日本語"], ["Korean", "Korean · 한국어"], ["Portuguese", "Portuguese"],
+  ["Russian", "Russian"], ["Spanish", "Spanish"],
+];
 const Pill = ({ active, children, ...p }) => (
   <button {...p} className={`rounded-full px-4 py-1.5 text-sm transition-all ${active ? "bg-lumen text-ink shadow-[0_0_24px_-6px_rgba(143,131,255,.8)]" : "border border-line text-dim hover:border-iris/60 hover:text-lumen"} ${p.className || ""}`}>{children}</button>
 );
@@ -51,6 +59,7 @@ export default function PromptStudio({ res, preview, user }) {
   const text = manual ?? built;
   const st = stats(text, target);
   const q = quality(chips);
+  const promptScore = improvementScore(chips, text);
   const textRef = useRef(text); textRef.current = text;
 
   const snapshot = (label) => setVersions((v) => [{ id: Math.random(), label, text: textRef.current }, ...v].slice(0, 8));
@@ -90,6 +99,20 @@ export default function PromptStudio({ res, preview, user }) {
           <Ring value={q.score} />
           <div className="min-w-0"><p className="font-display text-lg font-semibold">{q.score}% complete</p>
             <p className="text-xs text-dim">{q.missing.length ? `Add or enable: ${q.missing.join(", ")}` : "Every key aspect is covered."}</p></div>
+        </div>
+        <div className="card p-5">
+          <div className="flex items-end justify-between gap-3">
+            <div><p className="text-xs font-semibold uppercase tracking-wider text-iris">Prompt Improvement Score</p><p className="mt-1 text-xs text-dim">A practical rubric, not an AI verdict.</p></div>
+            <p className="font-display text-3xl font-semibold tabular-nums">{promptScore.score}<span className="text-base text-dim">/100</span></p>
+          </div>
+          <div className="mt-4 space-y-3">
+            {promptScore.dimensions.map((item) => (
+              <div key={item.name}>
+                <div className="mb-1 flex justify-between text-xs"><span>{item.name}</span><span className="tabular-nums text-dim">{item.score}</span></div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-raised"><motion.div className="h-full rounded-full bg-gradient-to-r from-iris to-lumen" initial={{ width: 0 }} animate={{ width: `${item.score}%` }} transition={{ duration: 0.65 }} /></div>
+              </div>))}
+          </div>
+          <p className="mt-4 text-xs leading-relaxed text-dim">{promptScore.dimensions.find((item) => item.score < 70)?.tip || "Strong coverage across all five prompt dimensions."}</p>
         </div>
         <div className="card p-5"><p className="mb-3 text-sm font-semibold">Palette</p><PaletteBar palette={res.palette} /></div>
         {attrs.uncertain_observations?.length > 0 && <div className="card p-5"><p className="mb-2 text-sm font-semibold">The model wasn&apos;t sure about</p><ul className="list-disc space-y-1 pl-4 text-xs text-dim">{attrs.uncertain_observations.map((u) => <li key={u}>{u}</li>)}</ul></div>}
@@ -147,7 +170,7 @@ export default function PromptStudio({ res, preview, user }) {
                 {[["polish", Sparkles, "Polish"], ["expand", Expand, "Expand"], ["shorten", Scissors, "Shorten"]].map(([m, Icon, l]) => (
                   <button key={m} onClick={() => ai(m)} disabled={!!busy} className="btn btn-ghost !py-2 text-sm"><Icon size={15} /> {l}</button>))}
                 <button onClick={makeVars} disabled={!!busy} className="btn btn-ghost !py-2 text-sm">{busy === "vars" ? <Loader2 size={15} className="animate-spin" /> : <Shuffle size={15} />} 3 variations</button>
-                <select aria-label="Translate prompt" defaultValue="" disabled={!!busy} onChange={(e) => { if (e.target.value) ai("translate", e.target.value); e.target.value = ""; }} className="field !w-auto !py-2 text-sm"><option value="" disabled>Translate to...</option>{LANGS.map((l) => <option key={l}>{l}</option>)}</select>
+                <select aria-label="Translate prompt" defaultValue="" disabled={!!busy} onChange={(e) => { if (e.target.value) ai("translate", e.target.value); e.target.value = ""; }} className="field !w-auto !py-2 text-sm"><option value="" disabled>Translate to...</option>{LANGS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
               </div>
             </div>
           </div>

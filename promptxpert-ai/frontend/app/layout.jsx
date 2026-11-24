@@ -3,6 +3,7 @@ import "./globals.css";
 import Providers from "@/components/Providers";
 import Navbar from "@/components/Navbar";
 import CommandPalette from "@/components/CommandPalette";
+import RouteTransition from "@/components/RouteTransition";
 
 const display = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-display", display: "swap" });
 const body = Figtree({ subsets: ["latin"], variable: "--font-body", display: "swap" });
@@ -20,7 +21,7 @@ export default function RootLayout({ children }) {
         <Providers>
           <Navbar />
           <CommandPalette />
-          {children}
+          <RouteTransition>{children}</RouteTransition>
         </Providers>
       </body>
     </html>

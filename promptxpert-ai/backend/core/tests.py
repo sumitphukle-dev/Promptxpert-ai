@@ -39,6 +39,19 @@ class DetectorTests(unittest.TestCase):
         self.assertTrue(0 <= out["score"] <= 1)
         self.assertIn("confidence_note", out)
 
+    def test_heuristic_score_changes_for_distinct_image_signals(self):
+        import numpy as np
+
+        flat = Image.new("RGB", (256, 256), (120, 80, 200))
+        rng = np.random.default_rng(42)
+        noisy = Image.fromarray(rng.integers(0, 256, (256, 256, 3), dtype=np.uint8))
+
+        flat_score = detector._heuristics(flat)["score"]
+        noisy_score = detector._heuristics(noisy)["score"]
+
+        self.assertNotEqual(flat_score, noisy_score)
+        self.assertGreater(abs(flat_score - noisy_score), 0.05)
+
 
 class ProvenanceTests(unittest.TestCase):
     def test_missing_metadata_is_not_ai(self):

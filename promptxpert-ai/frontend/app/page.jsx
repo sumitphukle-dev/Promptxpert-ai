@@ -125,6 +125,8 @@ const TOOLS = [
   [ShieldAlert, "Privacy scan", "Finds GPS and serial numbers in a file, and strips them in one click."],
   [Palette, "Palette export", "Copy dominant colours as CSS variables, Tailwind or JSON."],
   [Link2, "Compare and share", "Slide-compare two images and share a results-only link."],
+  [Activity, "Prompt Improvement Score", "See detail, clarity, composition, lighting and completeness at a glance, with practical suggestions."],
+  [Shuffle, "Multilingual prompts", "Translate prompts into Hindi, Marathi, English and 17 more languages while retaining generator syntax."],
 ];
 
 function Toolkit() {

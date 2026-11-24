@@ -103,3 +103,37 @@ export function quality(chips) {
   const missing = SLOTS.filter(([cats]) => !chips.some((c) => c.on && cats.split("|").includes(c.cat))).map(([, l]) => l);
   return { score: Math.round(((SLOTS.length - missing.length) / SLOTS.length) * 100), missing };
 }
+
+const clampScore = (value) => Math.max(0, Math.min(100, Math.round(value)));
+
+export function improvementScore(chips, prompt = "") {
+  const active = chips.filter((c) => c.on);
+  const text = prompt.split(/\nNegative prompt:/i, 1)[0]
+    .replace(/\s+--(?:no|ar|style|stylize)\b.*$/i, "")
+    .toLowerCase();
+  const words = text.match(/[\p{L}\p{N}]+/gu) || [];
+  const has = (category, pattern) =>
+    active.some((chip) => chip.cat === category) || pattern.test(text);
+  const subject = has("subject", /\b(subject|person|people|animal|object|portrait|landscape)\b/);
+  const setting = has("environment", /\b(setting|scene|environment|indoors|outdoors|forest|city|beach|mountain)\b/);
+  const composition = has("composition", /\b(composition|framing|centered|wide shot|close.?up|foreground|background|rule of thirds)\b/);
+  const camera = has("camera_perspective", /\b(camera|eye.?level|low.?angle|high.?angle|overhead|perspective|viewpoint)\b/);
+  const lighting = has("lighting", /\b(light|lighting|backlit|backlight|softbox|sunlight|moonlight|shadow|glow|dawn|sunset)\b/);
+  const completeness = quality(chips);
+  const dimensions = [
+    { name: "Detail", score: clampScore(30 + Math.min(words.length, 40) * 1.25 + Math.min(active.length, 8) * 2),
+      tip: "Add material, texture, or other visible details." },
+    { name: "Clarity", score: clampScore(25 + (subject ? 45 : 0) + (setting ? 20 : 0) + (text.trim() ? 10 : 0)),
+      tip: "Name one clear main subject and its setting." },
+    { name: "Composition", score: clampScore(30 + (composition ? 40 : 0) + (camera ? 30 : 0)),
+      tip: "Describe framing, viewpoint, or camera angle." },
+    { name: "Lighting", score: clampScore(25 + (lighting ? 75 : 0)),
+      tip: "Specify light direction, softness, or time of day." },
+    { name: "Completeness", score: completeness.score,
+      tip: completeness.missing.length ? `Cover: ${completeness.missing.join(", ")}.` : "All key visual categories are covered." },
+  ];
+  return {
+    score: Math.round(dimensions.reduce((sum, item) => sum + item.score, 0) / dimensions.length),
+    dimensions,
+  };
+}

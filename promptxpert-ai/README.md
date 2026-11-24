@@ -6,8 +6,8 @@ Frontend: Next.js 14 (App Router), Tailwind, Framer Motion. Backend: Django + DR
 ## Features
 **Image to Prompt Generator (main feature, `/generator`)**: upload up to 6 images and open the Prompt Studio. Five target generators
 (Universal, Midjourney, Stable Diffusion with word weights, Flux, DALL-E 3), four styles, a length slider, "reimagine as" in 8 art styles,
-a chip-based prompt builder (toggle, weight, add and remove terms), live token meter per generator, completeness score, AI rewrite tools
-(polish, expand, shorten, translate, negative prompt, 3 variations via Codestral), camera settings read from EXIF, automatic aspect ratio and
+a chip-based prompt builder (toggle, weight, add and remove terms), live token meter per generator, completeness and five-dimension Prompt Improvement Scores (detail, clarity, composition, lighting and completeness), AI rewrite tools
+(polish, expand, shorten, translate into 20 languages including Hindi, Marathi and English, negative prompt, 3 variations via Codestral), camera settings read from EXIF, automatic aspect ratio and
 SDXL size, version history with restore, alt text, prompt pack export, and save-to-library.
 
 **Authenticity detector (`/analyze`)**: classifier with an inconclusive band, forensic heatmaps with overlay slider, robustness check,
@@ -19,7 +19,7 @@ share links (results only), Markdown and JSON reports, dashboard charts, status 
 ## How it works
 | Part | What it does |
 |---|---|
-| Detector | EfficientNet-B0 if `backend/ml/weights/efficientnet_b0.pt` exists, otherwise a low-confidence **heuristic fallback** (reported as such in every response). Has an "inconclusive" band. |
+| Detector | EfficientNet-B0 if `backend/ml/weights/efficientnet_b0.pt` exists, otherwise a low-confidence **heuristic fallback** (reported as such in every response). Its normalized image signals avoid collapsing diverse uploads to the 32% score floor. Has an "inconclusive" band. |
 | Provenance | EXIF + PNG generation-parameters + C2PA *presence* detection. Missing metadata is never treated as AI. |
 | Prompt | Mistral vision model (`MISTRAL_VISION_MODEL`, default `mistral-small-latest`) returns validated JSON, composed into 4 styles x 3 formats. |
 | Polish | `MISTRAL_MODEL=codestral-2508` rewrites the final prompt (text only; Codestral cannot read images). |
