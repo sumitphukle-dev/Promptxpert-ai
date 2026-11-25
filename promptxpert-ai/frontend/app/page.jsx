@@ -31,8 +31,9 @@ function Hero() {
             Upload an image and get ready-to-use prompts for Midjourney, Stable Diffusion, Flux and DALL·E, then fine-tune every detail in the studio. You can also check an image&apos;s authenticity signals, and we keep that evidence honest and separate.
           </motion.p>
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.1, duration: 0.8, ease: EASE }} className="mt-9 flex flex-wrap items-center gap-4">
-            <Link href="/generator" className="btn btn-primary">Generate a prompt</Link>
-            <Link href="/analyze" className="btn btn-ghost">Check authenticity</Link>
+            <Link href="/prompt-lab" className="btn btn-primary"><Sparkles size={16} /> Open Prompt Lab</Link>
+            <Link href="/generator" className="btn btn-ghost">Generate from an image</Link>
+            <Link href="/analyze" className="rounded-full px-3 py-2 text-sm text-dim transition-colors hover:text-lumen">Check authenticity</Link>
           </motion.div>
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4 }} className="mt-5 text-sm text-dim">
             No account needed. Uploaded images are deleted right after analysis.
@@ -117,6 +118,12 @@ function Signals() {
 
 
 const TOOLS = [
+  [Sparkles, "Professional Prompt Lab", "Expand one-line ideas into structured prompts with role, context, objective, constraints, output format and examples.", "sm:col-span-2"],
+  [Fingerprint, "Prompt quality analyzer", "Score clarity, context, constraints, output format and examples—or switch to a visual rubric for subject detail, light, composition and style."],
+  [LayoutDashboard, "Six expert starters", "Get a useful head start with researcher, copywriter, tutor, developer, product and analyst templates."],
+  [Layers, "Model-aware structure", "Shape instructions for ChatGPT, Claude, Gemini or use a clean, universal prompt."],
+  [Activity, "Drafts and version restore", "Your draft saves locally in this browser. Revisit and restore earlier prompt versions."],
+  [Shuffle, "Rewrite and translate", "Polish a prompt with AI or translate it into Hindi, Marathi, English and other languages."],
   [Wand2, "Prompt Studio", "Toggle, weight and edit every detail the AI found, with a live prompt, token meter and completeness score.", "sm:col-span-2"],
   [Shuffle, "Five target generators", "Midjourney flags, Stable Diffusion weights, Flux and DALL·E prose, or universal tags."],
   [Sparkles, "AI rewrite tools", "Polish, expand, shorten, translate, reimagine in 8 styles, or draft a negative prompt."],

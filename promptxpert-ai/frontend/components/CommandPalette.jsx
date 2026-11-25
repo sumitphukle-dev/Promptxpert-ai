@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Search } from "lucide-react";
 import { useAuth } from "./Providers";
 
-const BASE = [["Image to Prompt Generator", "/generator", "Turn an image into prompts"], ["Authenticity detector", "/analyze", "AI-likelihood, forensics, privacy"], ["Compare two images", "/compare", "Similarity and side-by-side"], ["Dashboard", "/dashboard", "Your activity charts", true], ["History", "/history", "Saved analyses", true], ["System status", "/status", "Is everything up?"], ["Home", "/", "Landing page"]];
+const BASE = [["Professional Prompt Lab", "/prompt-lab", "Build, score, polish and translate prompts"], ["Image to Prompt Generator", "/generator", "Turn an image into prompts"], ["Authenticity detector", "/analyze", "AI-likelihood, forensics, privacy"], ["Compare two images", "/compare", "Similarity and side-by-side"], ["Dashboard", "/dashboard", "Your activity charts", true], ["History", "/history", "Saved analyses", true], ["System status", "/status", "Is everything up?"], ["Home", "/", "Landing page"]];
 
 export default function CommandPalette() {
   const router = useRouter();

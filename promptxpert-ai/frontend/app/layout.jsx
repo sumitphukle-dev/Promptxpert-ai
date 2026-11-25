@@ -9,8 +9,8 @@ const display = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-disp
 const body = Figtree({ subsets: ["latin"], variable: "--font-body", display: "swap" });
 
 export const metadata = {
-  title: "PromptXpert AI: image authenticity signals and prompt reconstruction",
-  description: "Check an image's AI-generation signals and provenance, then rebuild an editable prompt from it.",
+  title: "PromptXpert AI: professional prompts and image intelligence",
+  description: "Build and analyze professional prompts, recreate prompts from images, and inspect image authenticity signals.",
 };
 export const viewport = { themeColor: "#080A12" };
 

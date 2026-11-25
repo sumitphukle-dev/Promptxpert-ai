@@ -4,6 +4,8 @@ Image authenticity signals + vision-based reverse prompt engineering.
 Frontend: Next.js 14 (App Router), Tailwind, Framer Motion. Backend: Django + DRF, SQLite. Free-tier friendly.
 
 ## Features
+**Professional Prompt Lab (`/prompt-lab`)**: turn a one-line instruction into a structured prompt with a role, context, objective, constraints, audience, tone, output format and example. Choose from six editable role starters and tune instructions for ChatGPT, Claude, Gemini or a universal format. Review the five-part general or visual prompt-quality rubric, get actionable suggestions, edit the result, polish or translate it, export to text/JSON, and restore recent versions. Drafts are stored locally in the browser.
+
 **Image to Prompt Generator (main feature, `/generator`)**: upload up to 6 images and open the Prompt Studio. Five target generators
 (Universal, Midjourney, Stable Diffusion with word weights, Flux, DALL-E 3), four styles, a length slider, "reimagine as" in 8 art styles,
 a chip-based prompt builder (toggle, weight, add and remove terms), live token meter per generator, completeness and five-dimension Prompt Improvement Scores (detail, clarity, composition, lighting and completeness), AI rewrite tools
