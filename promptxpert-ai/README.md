@@ -9,7 +9,7 @@ Frontend: Next.js 14 (App Router), Tailwind, Framer Motion. Backend: Django + DR
 **Image to Prompt Generator (main feature, `/generator`)**: upload up to 6 images and open the Prompt Studio. Five target generators
 (Universal, Midjourney, Stable Diffusion with word weights, Flux, DALL-E 3), four styles, a length slider, "reimagine as" in 8 art styles,
 a chip-based prompt builder (toggle, weight, add and remove terms), live token meter per generator, completeness and five-dimension Prompt Improvement Scores (detail, clarity, composition, lighting and completeness), AI rewrite tools
-(polish, expand, shorten, translate into 20 languages including Hindi, Marathi and English, negative prompt, 3 variations via Codestral), camera settings read from EXIF, automatic aspect ratio and
+(polish, expand, shorten, translate into 20 languages including Hindi, Marathi and English, negative prompt, 3 variations via Groq), camera settings read from EXIF, automatic aspect ratio and
 SDXL size, version history with restore, alt text, prompt pack export, and save-to-library.
 
 **Authenticity detector (`/analyze`)**: classifier with an inconclusive band, forensic heatmaps with overlay slider, robustness check,
@@ -23,8 +23,7 @@ share links (results only), Markdown and JSON reports, dashboard charts, status 
 |---|---|
 | Detector | EfficientNet-B0 if `backend/ml/weights/efficientnet_b0.pt` exists, otherwise a low-confidence **heuristic fallback** (reported as such in every response). Its normalized image signals avoid collapsing diverse uploads to the 32% score floor. Has an "inconclusive" band. |
 | Provenance | EXIF + PNG generation-parameters + C2PA *presence* detection. Missing metadata is never treated as AI. |
-| Prompt | Mistral vision model (`MISTRAL_VISION_MODEL`, default `mistral-small-latest`) returns validated JSON, composed into 4 styles x 3 formats. |
-| Polish | `MISTRAL_MODEL=codestral-2508` rewrites the final prompt (text only; Codestral cannot read images). |
+| Prompt and rewrites | Groq Chat Completions API (`GROQ_API_KEY`). One model, `GROQ_MODEL` (default `qwen/qwen3.8-27b`), handles both vision-based prompt reconstruction and text rewrites. |
 | History | JWT auth, results stored in SQLite, **no image bytes stored**, Markdown report export. |
 
 ## Run locally
@@ -32,7 +31,7 @@ share links (results only), Markdown and JSON reports, dashboard charts, status 
 # backend
 cd backend && python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env   # then: export $(grep -v '^#' .env | xargs)  (or use your shell's dotenv)
+cp .env.example .env   # set GROQ_API_KEY from https://console.groq.com/keys
 export DEBUG=1 && python manage.py migrate && python manage.py runserver
 
 # frontend (new terminal)
@@ -50,7 +49,7 @@ git push -u origin main
 ```
 
 ## Deploy (all free)
-1. **Backend on Render**: New > Blueprint > pick the repo (it reads `render.yaml`). In the dashboard set `MISTRAL_API_KEY` (free key from console.mistral.ai). Leave `FRONTEND_URL` for step 3.
+1. **Backend on Render**: New > Blueprint > pick the repo (it reads `render.yaml`). In the dashboard set `GROQ_API_KEY` from https://console.groq.com/keys. `GROQ_MODEL` defaults to `qwen/qwen3.8-27b`; check Groq's current model pricing and account limits before deployment. Leave `FRONTEND_URL` for step 3.
 2. **Frontend on Vercel**: Import the repo, set **Root Directory = `frontend`**, add `NEXT_PUBLIC_API_URL=https://<your-render-service>.onrender.com`, deploy.
 3. Back in Render, set `FRONTEND_URL=https://<your-app>.vercel.app` and redeploy (this enables CORS).
 
@@ -65,7 +64,7 @@ deployment, run `python manage.py makemigrations core` locally and commit `core/
 - Render free sleeps after ~15 min idle; the first request takes ~30 s.
 - Render free disk is ephemeral: **SQLite history resets on redeploy/restart**. For permanent history add a free external Postgres (e.g. Neon/Supabase) and swap `DATABASES`.
 - Render free has 512 MB RAM, which is too small for PyTorch. The deployed API uses the heuristic fallback. To use the trained model, run the backend somewhere with more RAM and add `torch`/`torchvision` to requirements.
-- Mistral free tier is rate-limited; the API returns a clear message when that happens and throttles anonymous users to 30 analyses/hour.
+- Groq model availability, pricing, and rate limits depend on the account plan and can change. The API returns a clear message when rate-limited; anonymous users are also throttled to 30 analyses/hour.
 
 ## Training the real detector (synopsis section 4.4)
 See `backend/ml/train.py` and `backend/ml/evaluate.py`. Report only the numbers `evaluate.py` prints. To commit weights, delete the `*.pt` line in `.gitignore`.

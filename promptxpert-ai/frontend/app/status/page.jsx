@@ -19,7 +19,7 @@ export default function Status() {
   const rows = h ? [
     ["API", true, `Reachable in ${ms} ms${ms > 5000 ? " (the free server had been asleep)" : ""}`],
     ["Authenticity detector", h.detector === "efficientnet-b0", h.detector === "efficientnet-b0" ? "EfficientNet-B0 model loaded" : "Heuristic fallback only. Trained weights are not installed, so results are low-confidence.", h.detector !== "efficientnet-b0"],
-    ["Prompt generation", h.prompt_ready, h.prompt_ready ? `Vision: ${h.vision_model}. Text: ${h.text_model}` : "MISTRAL_API_KEY is not set on the server."],
+    ["Prompt generation", h.prompt_ready, h.prompt_ready ? `Groq vision: ${h.vision_model}. Text: ${h.text_model}` : "GROQ_API_KEY is not set on the server."],
     ["Upload limit", true, `${h.max_upload_mb} MB per image`],
   ] : [];
 

@@ -1,8 +1,7 @@
-"""Mistral API client. One key, server-side only.
+"""Groq API client. One key, server-side only.
 
-Vision:  MISTRAL_VISION_MODEL (default mistral-small-latest, vision-capable, free tier).
-Text:    MISTRAL_MODEL (default codestral-2508) - text-only prompt polishing.
-         Codestral is a code model and does NOT accept images.
+Uses one vision-capable model for both image analysis and text prompt tools.
+GROQ_MODEL defaults to qwen/qwen3.8-27b.
 """
 import base64
 import json
@@ -14,22 +13,22 @@ import requests
 
 from .prompts import EXTRA, EXTRA_LISTS, FIELDS, normalize
 
-API = "https://api.mistral.ai/v1/chat/completions"
+API = "https://api.groq.com/openai/v1/chat/completions"
 
 
-class MistralError(Exception):
+class GroqError(Exception):
     pass
 
 
 def _key():
-    k = os.getenv("MISTRAL_API_KEY")
+    k = os.getenv("GROQ_API_KEY")
     if not k:
-        raise MistralError("The prompt generator is not configured (missing MISTRAL_API_KEY on the server).")
+        raise GroqError("The prompt generator is not configured (missing GROQ_API_KEY on the server).")
     return k
 
 
 def _chat(model: str, messages: list, json_mode: bool, timeout: int = 60) -> str:
-    body = {"model": model, "messages": messages, "temperature": 0.2, "max_tokens": 900}
+    body = {"model": model, "messages": messages, "temperature": 0.2, "max_completion_tokens": 900}
     if json_mode:
         body["response_format"] = {"type": "json_object"}
     for attempt in range(2):
@@ -37,21 +36,21 @@ def _chat(model: str, messages: list, json_mode: bool, timeout: int = 60) -> str
             r = requests.post(API, json=body, timeout=timeout,
                               headers={"Authorization": f"Bearer {_key()}", "Content-Type": "application/json"})
         except requests.RequestException:
-            raise MistralError("Could not reach the Mistral API. Try again in a moment.")
+            raise GroqError("Could not reach the Groq API. Try again in a moment.")
         if r.status_code == 429 and attempt == 0:
             time.sleep(2)
             continue
         if r.status_code == 429:
-            raise MistralError("Mistral free-tier rate limit reached. Wait a minute and retry.")
+            raise GroqError("Groq rate limit reached. Wait a moment and retry.")
         if r.status_code in (401, 403):
-            raise MistralError("The server's Mistral API key was rejected.")
+            raise GroqError("The server's Groq API key was rejected.")
         if not r.ok:
-            raise MistralError(f"Mistral returned an error ({r.status_code}). Try again.")
+            raise GroqError(f"Groq returned an error ({r.status_code}). Try again.")
         try:
             return r.json()["choices"][0]["message"]["content"]
         except (KeyError, IndexError, ValueError):
-            raise MistralError("Unexpected response from Mistral.")
-    raise MistralError("Mistral request failed.")
+            raise GroqError("Unexpected response from Groq.")
+    raise GroqError("Groq request failed.")
 
 
 INSTRUCTION = (
@@ -68,20 +67,20 @@ INSTRUCTION = (
 
 
 def describe_image(raw: bytes, mime: str) -> tuple[dict, str]:
-    model = os.getenv("MISTRAL_VISION_MODEL", "mistral-small-latest")
+    model = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
     data_url = f"data:{mime};base64,{base64.b64encode(raw).decode()}"
     msgs = [{"role": "user", "content": [{"type": "text", "text": INSTRUCTION},
-                                         {"type": "image_url", "image_url": data_url}]}]
+                                         {"type": "image_url", "image_url": {"url": data_url}}]}]
     text = _chat(model, msgs, json_mode=True, timeout=90)
     text = re.sub(r"^```(?:json)?|```$", "", text.strip(), flags=re.M).strip()
     try:
         return normalize(json.loads(text)), model
     except (ValueError, TypeError) as e:
-        raise MistralError(f"The model's answer could not be validated ({e}). Please retry.")
+        raise GroqError(f"The model's answer could not be validated ({e}). Please retry.")
 
 
 def polish_prompt(draft: str, style: str) -> tuple[str, str]:
-    model = os.getenv("MISTRAL_MODEL", "codestral-2508")
+    model = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
     msgs = [
         {"role": "system", "content": "You rewrite image-generation prompts. Keep every concrete visual detail, "
          "add no new objects, remove redundancy, and return only the final prompt text."},
@@ -91,7 +90,7 @@ def polish_prompt(draft: str, style: str) -> tuple[str, str]:
 
 
 def variations(draft: str, n: int = 3) -> tuple[list[str], str]:
-    model = os.getenv("MISTRAL_MODEL", "codestral-2508")
+    model = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
     msgs = [
         {"role": "system", "content": 'You write image-generation prompts. Reply with JSON: {"variations": [..]} holding exactly '
          "the requested number of different prompts. Keep the subject and every concrete detail; vary only camera, lighting, "
@@ -104,7 +103,7 @@ def variations(draft: str, n: int = 3) -> tuple[list[str], str]:
     except (ValueError, AttributeError):
         items = []
     if not items:
-        raise MistralError("The model returned no usable variations.")
+        raise GroqError("The model returned no usable variations.")
     return items, model
 
 
@@ -119,7 +118,7 @@ TRANSFORMS = {
 
 
 def transform(text: str, mode: str, arg: str = "") -> tuple[str, str]:
-    model = os.getenv("MISTRAL_MODEL", "codestral-2508")
+    model = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
     msgs = [
         {"role": "system", "content": "You edit image-generation prompts. Return only the resulting prompt text, with no "
          "commentary or quotes. " + TRANSFORMS[mode].format(arg=arg)},

@@ -164,7 +164,7 @@ export default function ResultView({ res, preview, file, user, onRetryPrompt, re
                     {err && <p role="alert" className="mt-3 text-sm text-warn">{err}</p>}
                     <div className="mt-4 flex flex-wrap items-center gap-3">
                       <select value={fmt} onChange={(e) => { setFmt(e.target.value); recompose(style, e.target.value); }} aria-label="Prompt format" className="field !w-auto !py-2 text-sm">{FORMATS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
-                      <button onClick={() => recompose(style, fmt, true)} disabled={busy} className="btn btn-ghost !py-2 text-sm"><Sparkles size={15} /> Polish with Codestral</button>
+                      <button onClick={() => recompose(style, fmt, true)} disabled={busy} className="btn btn-ghost !py-2 text-sm"><Sparkles size={15} /> Polish with Groq</button>
                       <button onClick={makeVariations} disabled={varBusy} className="btn btn-ghost !py-2 text-sm">{varBusy ? <Loader2 size={15} className="animate-spin" /> : <Shuffle size={15} />} 3 variations</button>
                       <CopyButton text={text} label="Copy" className="btn btn-primary !py-2 text-sm" />
                       <button onClick={() => download("prompt.txt", text)} className="btn btn-ghost !py-2 text-sm"><Download size={15} /> .txt</button>

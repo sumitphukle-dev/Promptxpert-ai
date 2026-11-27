@@ -23,7 +23,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import GeneratedPrompt, ImageAnalysis, SystemEvent
-from .services import detector, forensics, mistral, prompts, provenance
+from .services import detector, forensics, groq, prompts, provenance
 from .services.validation import InvalidImage, validate_image
 
 log = logging.getLogger(__name__)
@@ -68,10 +68,11 @@ class Health(APIView):
 
     def get(self, request):
         loaded = detector._try_load_model() is not None
+        model = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
         return Response({"ok": True, "detector": "efficientnet-b0" if loaded else "heuristic-fallback",
-                         "prompt_ready": bool(os.getenv("MISTRAL_API_KEY")),
-                         "text_model": os.getenv("MISTRAL_MODEL", "codestral-2508"),
-                         "vision_model": os.getenv("MISTRAL_VISION_MODEL", "mistral-small-latest"),
+                         "prompt_ready": bool(os.getenv("GROQ_API_KEY")),
+                         "text_model": model,
+                         "vision_model": model,
                          "max_upload_mb": settings.MAX_UPLOAD_MB})
 
 
@@ -160,10 +161,10 @@ class Analyze(APIView):
         if "prompt" in ops:
             t = time.perf_counter()
             try:
-                attrs, model_id = mistral.describe_image(v.raw, v.mime)
+                attrs, model_id = groq.describe_image(v.raw, v.mime)
                 final = prompts.compose(attrs, style)
                 result["prompt"] = {"attributes": attrs, "text": final, "style": style, "model": model_id}
-            except mistral.MistralError as e:
+            except groq.GroqError as e:
                 result["prompt_error"] = str(e)
             result["timings_ms"]["prompt"] = int((time.perf_counter() - t) * 1000)
 
@@ -216,9 +217,9 @@ class Compose(APIView):
         out = {"text": text, "style": style, "format": fmt, "polished": False}
         if request.data.get("polish"):
             try:
-                out["text"], out["model"] = mistral.polish_prompt(text, style)
+                out["text"], out["model"] = groq.polish_prompt(text, style)
                 out["polished"] = True
-            except mistral.MistralError as e:
+            except groq.GroqError as e:
                 out["polish_error"] = str(e)
         aid = request.data.get("analysis_id")
         if aid and request.user.is_authenticated:
@@ -237,13 +238,13 @@ class Transform(APIView):
         arg = re.sub(r"[^\w \-]", "", str(request.data.get("arg") or ""))[:40].strip()
         if not text or len(text) > 2500:
             return Response({"error": "Provide prompt text up to 2500 characters."}, status=400)
-        if mode not in mistral.TRANSFORMS:
+        if mode not in groq.TRANSFORMS:
             return Response({"error": "Unknown mode."}, status=400)
         if mode in ("reimagine", "translate") and not arg:
             return Response({"error": "This mode needs a style or language."}, status=400)
         try:
-            out, model = mistral.transform(text, mode, arg)
-        except mistral.MistralError as e:
+            out, model = groq.transform(text, mode, arg)
+        except groq.GroqError as e:
             return Response({"error": str(e)}, status=503)
         return Response({"text": out, "mode": mode, "model": model})
 
@@ -284,9 +285,9 @@ class Variations(APIView):
             return Response({"error": str(e)}, status=400)
         base = prompts.compose(attrs, "detailed")
         try:
-            items, model = mistral.variations(base, 3)
+            items, model = groq.variations(base, 3)
             return Response({"variations": items, "model": model, "source": "ai"})
-        except mistral.MistralError as e:
+        except groq.GroqError as e:
             fallback = [prompts.compose(attrs, s) for s in ("concise", "cinematic", "illustrative")]
             return Response({"variations": fallback, "source": "templates", "note": str(e)})
 

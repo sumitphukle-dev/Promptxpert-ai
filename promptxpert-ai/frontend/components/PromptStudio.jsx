@@ -151,7 +151,7 @@ export default function PromptStudio({ res, preview, user }) {
             </div>
             <div className="relative mt-4">
               <textarea value={text} onChange={(e) => setManual(e.target.value)} rows={7} spellCheck={false} aria-label="Prompt" className="field resize-y font-[450] leading-relaxed" />
-              <AnimatePresence>{busy && busy !== "vars" && busy !== "negative" && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 flex items-center justify-center gap-2 rounded-xl bg-ink/70 text-sm text-dim"><Loader2 className="animate-spin text-iris" size={18} /> Rewriting with Codestral...</motion.div>}</AnimatePresence>
+              <AnimatePresence>{busy && busy !== "vars" && busy !== "negative" && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 flex items-center justify-center gap-2 rounded-xl bg-ink/70 text-sm text-dim"><Loader2 className="animate-spin text-iris" size={18} /> Rewriting with Groq...</motion.div>}</AnimatePresence>
             </div>
             <div className="mt-3">
               <div className="mb-1 flex justify-between text-xs text-dim"><span>{st.used} / {st.limit} {st.unit}</span><span className={st.over ? "text-warn" : ""}>{st.note}</span></div>
@@ -165,7 +165,7 @@ export default function PromptStudio({ res, preview, user }) {
               {res.saved && <button onClick={save} className="btn btn-ghost !py-2 text-sm">{saved ? <><Check size={15} /> Saved</> : <><BookmarkCheck size={15} /> Save to library</>}</button>}
             </div>
             <div className="mt-5 border-t border-line pt-5">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-dim">AI tools (Mistral Codestral)</p>
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-dim">AI tools (Groq)</p>
               <div className="flex flex-wrap gap-2">
                 {[["polish", Sparkles, "Polish"], ["expand", Expand, "Expand"], ["shorten", Scissors, "Shorten"]].map(([m, Icon, l]) => (
                   <button key={m} onClick={() => ai(m)} disabled={!!busy} className="btn btn-ghost !py-2 text-sm"><Icon size={15} /> {l}</button>))}

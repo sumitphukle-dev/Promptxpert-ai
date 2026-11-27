@@ -14,5 +14,7 @@ services:
         generateValue: true
       - key: FRONTEND_URL
         sync: false   # paste your Vercel URL after the frontend deploys
-      - key: MISTRAL_API_KEY
-        sync: false   # paste your free Mistral key in the Render dashboard
+      - key: GROQ_API_KEY
+        sync: false   # paste your Groq API key in the Render dashboard
+      - key: GROQ_MODEL
+        value: qwen/qwen3.8-27b

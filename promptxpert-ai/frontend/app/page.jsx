@@ -210,7 +210,7 @@ function Honest() {
 
 const FAQ = [
   ["Are my images stored?", "No. Images are processed in memory and discarded. If you sign in, we save the results, a file hash and your prompt text, not the picture."],
-  ["Does the prompt come from Mistral?", "Yes. A Mistral vision model describes the image. Codestral powers the rewrite tools: polish, expand, shorten, translate, reimagine and negative prompts."],
+  ["Which AI powers prompts?", "Groq's vision-capable model describes uploaded images and powers prompt rewrites: polish, expand, shorten, translate, reimagine and negative prompts."],
   ["Why does it sometimes say inconclusive?", "Because that is the honest answer when the evidence is weak or conflicting. A forced yes or no would be less trustworthy."],
   ["Can it verify C2PA Content Credentials?", "It detects whether a credential appears to be embedded and says when it has not validated the signature."],
   ["Which generators are supported?", "Universal tags, Midjourney, Stable Diffusion, Flux and DALL·E 3. Each gets syntax it understands, such as aspect-ratio flags, word weights or plain prose."],

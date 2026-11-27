@@ -1,10 +1,12 @@
 """Run: python manage.py test   (service tests also run without Django: python -m unittest core.tests)"""
 import io
+import os
 import unittest
+from unittest.mock import Mock, patch
 
 from PIL import Image
 
-from core.services import detector, prompts, provenance
+from core.services import detector, groq, prompts, provenance
 from core.services.validation import InvalidImage, validate_image
 
 
@@ -12,6 +14,44 @@ def png_bytes(size=(128, 128), color=(120, 80, 200)):
     buf = io.BytesIO()
     Image.new("RGB", size, color).save(buf, "PNG")
     return buf.getvalue()
+
+
+class GroqServiceTests(unittest.TestCase):
+    def test_chat_uses_groq_endpoint_key_model_and_json_mode(self):
+        response = Mock()
+        response.status_code = 200
+        response.ok = True
+        response.json.return_value = {"choices": [{"message": {"content": "ok"}}]}
+        messages = [{"role": "user", "content": "test"}]
+
+        with patch.dict(os.environ, {"GROQ_API_KEY": "test-key"}), \
+                patch("core.services.groq.requests.post", return_value=response) as post:
+            result = groq._chat("qwen/qwen3.8-27b", messages, json_mode=True)
+
+        self.assertEqual(result, "ok")
+        args, kwargs = post.call_args
+        self.assertEqual(args[0], "https://api.groq.com/openai/v1/chat/completions")
+        self.assertEqual(kwargs["headers"]["Authorization"], "Bearer test-key")
+        self.assertEqual(kwargs["json"]["model"], "qwen/qwen3.8-27b")
+        self.assertEqual(kwargs["json"]["response_format"], {"type": "json_object"})
+
+    def test_describe_image_uses_groq_multimodal_payload(self):
+        with patch.dict(os.environ, {"GROQ_MODEL": "qwen/qwen3.8-27b"}), \
+                patch("core.services.groq._chat", return_value="{}") as chat, \
+                patch("core.services.groq.normalize", side_effect=lambda value: value):
+            result, model = groq.describe_image(b"x", "image/png")
+
+        self.assertEqual(result, {})
+        self.assertEqual(model, "qwen/qwen3.8-27b")
+        _, messages = chat.call_args.args
+        self.assertTrue(chat.call_args.kwargs["json_mode"])
+        image_content = messages[0]["content"][1]
+        self.assertEqual(image_content["image_url"], {"url": "data:image/png;base64,eA=="})
+
+    def test_missing_groq_key_is_reported(self):
+        with patch.dict(os.environ, {}, clear=True):
+            with self.assertRaisesRegex(groq.GroqError, "GROQ_API_KEY"):
+                groq._key()
 
 
 class ValidationTests(unittest.TestCase):
